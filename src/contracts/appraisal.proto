@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package appraisal.v1;
+
+message AppraiseRequest {
+  string vin = 1;
+  string region = 2;
+  string segment = 3;
+  string title_status = 4;
+  bool has_rare_modification = 5;
+  int32 mileage = 6;
+  int32 year = 7;
+  double image_damage_score = 8;
+  double image_tamper_score = 9;
+  double obd_health_score = 10;
+  double obd_weighted_dtc_severity = 11;
+}
+
+message AppraiseResponse {
+  double appraised_value_usd = 1;
+  double confidence = 2;
+  double interval_low_usd = 3;
+  double interval_high_usd = 4;
+  bool reject_for_manual_review = 5;
+}
+

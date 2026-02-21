@@ -1,0 +1,243 @@
+openapi: 3.1.0
+info:
+  title: AI Automobile Appraisal API
+  version: 0.3.0
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+  /healthz:
+    get:
+      summary: Kubernetes liveness probe
+      responses:
+        "200":
+          description: OK
+  /ready:
+    get:
+      summary: Dependency readiness check
+      responses:
+        "200":
+          description: Ready
+        "503":
+          description: Degraded dependencies
+  /appraise:
+    post:
+      summary: Compute appraisal value with confidence interval.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppraiseRequest"
+      responses:
+        "200":
+          description: Appraisal result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppraiseResponse"
+  /retrain/trigger:
+    post:
+      summary: Publish retraining trigger event.
+      responses:
+        "200":
+          description: Trigger published
+  /shadow/evaluate:
+    post:
+      summary: Run shadow evaluation against realized auction closes.
+      parameters:
+        - name: window_days
+          in: query
+          schema:
+            type: integer
+            default: 14
+        - name: use_mock
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Shadow evaluation results with per-segment metrics
+  /shadow/latest:
+    get:
+      summary: Get latest shadow metrics for a model version.
+      parameters:
+        - name: model_version
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Shadow metrics list
+  /canary/start:
+    post:
+      summary: Start a canary deployment for a candidate model.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CanaryStartRequest"
+      responses:
+        "200":
+          description: Canary started
+  /canary/evaluate:
+    post:
+      summary: Evaluate active canary and ramp/promote/rollback.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CanaryStartRequest"
+      responses:
+        "200":
+          description: Canary evaluation result
+  /promote:
+    post:
+      summary: Manual model promotion override.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PromoteRequest"
+      responses:
+        "200":
+          description: Model promoted
+  /metrics:
+    get:
+      summary: Operational metrics (latency, counters, confidence histogram).
+      responses:
+        "200":
+          description: Metrics payload
+  /models:
+    get:
+      summary: Active models and canary states per segment/region.
+      responses:
+        "200":
+          description: Model list
+  /appraisals/recent:
+    get:
+      summary: Recent appraisals.
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Recent appraisals list
+components:
+  schemas:
+    AppraiseRequest:
+      type: object
+      required:
+        - vin
+        - region
+        - segment
+        - title_status
+        - mileage
+        - year
+        - image_damage_score
+        - image_tamper_score
+        - obd_health_score
+        - obd_weighted_dtc_severity
+      properties:
+        vin:
+          type: string
+          minLength: 17
+          maxLength: 17
+        region:
+          type: string
+        segment:
+          type: string
+        title_status:
+          type: string
+        has_rare_modification:
+          type: boolean
+          default: false
+        mileage:
+          type: integer
+          minimum: 0
+        year:
+          type: integer
+          minimum: 1980
+          maximum: 2035
+        image_damage_score:
+          type: number
+          minimum: 0
+          maximum: 1
+        image_tamper_score:
+          type: number
+          minimum: 0
+          maximum: 1
+        obd_health_score:
+          type: number
+          minimum: 0
+          maximum: 1
+        obd_weighted_dtc_severity:
+          type: number
+          minimum: 0
+          maximum: 1
+    AppraiseResponse:
+      type: object
+      required:
+        - appraised_value_usd
+        - confidence
+        - interval_low_usd
+        - interval_high_usd
+        - reject_for_manual_review
+      properties:
+        appraised_value_usd:
+          type: number
+        confidence:
+          type: number
+        interval_low_usd:
+          type: number
+        interval_high_usd:
+          type: number
+        reject_for_manual_review:
+          type: boolean
+    CanaryStartRequest:
+      type: object
+      required:
+        - candidate_version
+        - baseline_version
+        - segment
+        - region
+      properties:
+        candidate_version:
+          type: string
+        baseline_version:
+          type: string
+        segment:
+          type: string
+        region:
+          type: string
+        traffic_pct:
+          type: number
+          default: 0.10
+    PromoteRequest:
+      type: object
+      required:
+        - version
+        - segment
+        - region
+      properties:
+        version:
+          type: string
+        segment:
+          type: string
+        region:
+          type: string

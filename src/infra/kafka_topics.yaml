@@ -1,0 +1,29 @@
+topics:
+  appraisal_requests:
+    partitions: 12
+    replication_factor: 3
+    retention_ms: 604800000
+  appraisal_results:
+    partitions: 12
+    replication_factor: 3
+    retention_ms: 2592000000
+  retraining_triggers:
+    partitions: 3
+    replication_factor: 3
+    retention_ms: 7776000000
+  manual_review_queue:
+    partitions: 6
+    replication_factor: 3
+    retention_ms: 1209600000
+  shadow_alerts:
+    partitions: 3
+    replication_factor: 3
+    retention_ms: 2592000000
+  drift_alerts:
+    partitions: 3
+    replication_factor: 3
+    retention_ms: 2592000000
+  canary_events:
+    partitions: 3
+    replication_factor: 3
+    retention_ms: 2592000000
